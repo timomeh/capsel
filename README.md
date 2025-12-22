@@ -162,9 +162,10 @@ app.get("/users/:id", async (req, res) => {
 ### Testing
 
 ```ts
-test("can inject an override", async () => {
+test("returns some user settings", async () => {
   const kernel = new Kernel()
 
+  // mocks for database calls
   kernel.bind(
     UserRepo,
     vi.fn(
@@ -174,6 +175,7 @@ test("can inject an override", async () => {
     ),
   )
 
+  // mocks for cross-module dependencies
   kernel.bind(
     BillingFacade,
     vi.fn(
