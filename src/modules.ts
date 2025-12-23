@@ -1,10 +1,11 @@
 import { tokenizedDependency } from "./dependencies"
+import { getRootKernel, Kernel } from "./kernel"
 import type { InstantiableClass, Scope } from "./types"
 
 export const BRAND = Symbol("_capsel_brand")
 export const TOKEN = Symbol("_capsel_token")
 
-type Layer = "facade" | "service" | "repo" | "controller" | "other"
+type Layer = "facade" | "service" | "repo" | "action" | "other"
 
 type Branded<ModuleName extends string, LayerName extends Layer> = {
   readonly [BRAND]: ClassBrand<ModuleName, LayerName>
@@ -76,9 +77,42 @@ export function createModule<const ModuleName extends string>(
     static readonly [BRAND] = new ClassBrand(moduleName, "repo")
     static scope: Scope = "invoke"
   }
-  abstract class Controller extends BaseClass {
-    static readonly [BRAND] = new ClassBrand(moduleName, "controller")
+  abstract class Action extends BaseClass {
+    static readonly [BRAND] = new ClassBrand(moduleName, "action")
     static scope: Scope = "transient"
+
+    abstract handle(...args: unknown[]): unknown | Promise<unknown>
+
+    static invoke<
+      TAction extends Action,
+      TResult = ReturnType<TAction["handle"]>,
+    >(
+      this: new () => TAction,
+      ...args: Parameters<TAction["handle"]>
+    ): TResult {
+      const kernel = getRootKernel() || new Kernel()
+      const scoped = kernel.scoped()
+      // biome-ignore lint/complexity/noThisInStatic: it's fine
+      const instance = scoped.create(this)
+      return instance.handle(...args) as TResult
+    }
+
+    static withKernel<TAction extends Action>(
+      this: new () => TAction,
+      kernel: Kernel,
+    ) {
+      // biome-ignore lint/complexity/noThisInStatic: it's fine
+      const ActionClass = this
+      return {
+        invoke<TResult = ReturnType<TAction["handle"]>>(
+          ...args: Parameters<TAction["handle"]>
+        ): TResult {
+          const scoped = kernel.scoped()
+          const instance = scoped.create(ActionClass)
+          return instance.handle(...args) as TResult
+        },
+      }
+    }
   }
   abstract class Singleton extends BaseClass {
     static readonly [BRAND] = new ClassBrand(moduleName, "other")
@@ -94,7 +128,7 @@ export function createModule<const ModuleName extends string>(
     Facade,
     Service,
     Repo,
-    Controller,
+    Action,
     Singleton,
     Class,
   }

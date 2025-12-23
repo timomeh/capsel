@@ -8,7 +8,7 @@ A TypeScript data layer kernel for backend- and fullstack apps. Compatible with 
 - Works in any server-side framework
 - Write code that's easy to test without module mocks all over the place
 - Structures code into modules, layers and interfaces
-- Familiar Controllers, Services, Repos, Facades
+- Familiar patterns: Actions, Services, Repos, Facades
 - Ensures that Facades are used for cross-module dependencies to prevent messy code dependencies
 - Tree shakeable
 - 🏗️ request-based invoke helpers with AsyncLocalStorage
@@ -18,15 +18,15 @@ A TypeScript data layer kernel for backend- and fullstack apps. Compatible with 
 ## Usage
 
 ```ts
-import { createModule, Kernel } from "capsel"
+import { createModule, Kernel, setRootKernel } from "capsel"
 
 // Users
 const UserModule = createModule("User")
 
-class UserSettingsController extends UserModule.Controller {
+class ShowUserSettingsAction extends UserModule.Action {
   users = this.inject(UserService)
 
-  async show(userId: string) {
+  async handle(userId: string) {
     const settings = await this.users.getSettings(userId)
     return {
       timezone: settings.timezone,
@@ -91,7 +91,9 @@ class BillingRepo extends BillingModule.Repo {
 }
 
 const kernel = new Kernel() // global instance
-const settings = await kernel.create(UserSettingsController).show(userId)
+kernel.setGlobal()
+
+const settings = await ShowUserSettingsAction.invoke(userId)
 // -> { timezone: 'GMT+1', hasSubscription: true }
 ```
 
@@ -100,19 +102,16 @@ const settings = await kernel.create(UserSettingsController).show(userId)
 _sample, some parts are unimplemented_
 
 ```tsx
-import { cache } from 'react'
 import { kernel } from '@/data/kernel'
 
-const invoke = cache(() => kernel.scope().context({ cookies: cookies() }))
-
 async function Layout() {
-  const settings = await invoke(UserSettingsController).show(userId)
+  const settings = await ShowUserSettingsAction.invoke(userId)
 
   return <div><Page /></div>
 }
 
 async function Page() {
-  const settings = await invoke(UserSettingsController).show(userId)
+  const settings = await ShowUserSettingsAction.invoke(userId)
 
   return (
     <ul>
@@ -139,7 +138,7 @@ import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {
   return {
-    settings: await kernel.invoke(UserSettingsController).show(userId)
+    settings: await ShowUserSettingsAction.invoke(userId)
   }
 }
 ```
@@ -154,7 +153,7 @@ const app = express()
 express.use((req, res, next) => kernel.runWithScope(() => next()))
 
 app.get("/users/:id", async (req, res) => {
-  const settings = await invoke(UserSettingsController).show(req.params.id)
+  const settings = await ShowUserSettingsAction.invoke(req.params.id)
   res.json({ data: settings })
 })
 ```
@@ -185,7 +184,7 @@ test("returns some user settings", async () => {
     ),
   )
 
-  await expect(kernel.create(UserSettingsController).show("1")).resolves.toEqual({
+  await expect(ShowUserSettingsAction.withKernel(kernel).invoke("1")).resolves.toEqual({
     timezone: "faked",
     hasSubscription: true
   })

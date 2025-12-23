@@ -13,6 +13,16 @@ type Binding<T = unknown> = {
   scope: Scope
 }
 
+let rootKernel: Kernel | null = null
+
+export function setRootKernel(kernel: Kernel) {
+  rootKernel = kernel
+}
+
+export function getRootKernel() {
+  return rootKernel
+}
+
 export class Kernel {
   private readonly singletons = new Map<Token, unknown>()
   private readonly invokeCache = new Map<Token, unknown>()
@@ -71,6 +81,10 @@ export class Kernel {
   scoped() {
     const forked = this.fork()
     return forked
+  }
+
+  setGlobal() {
+    setRootKernel(this)
   }
 
   create<T>(cls: Ctor<T>) {

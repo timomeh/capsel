@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest"
+import { beforeEach, describe, expect, test, vi } from "vitest"
 import { createModule, Kernel } from "../src"
 
 const users: Record<string, { id: string; name: string }> = {
@@ -22,18 +22,22 @@ class UserService extends Users.Service {
   }
 }
 
-class UsersController extends Users.Controller {
+class ShowUserAction extends Users.Action {
   service = this.inject(UserService)
 
-  async show(id: string) {
+  async handle(id: string) {
     return this.service.getProfile(id)
   }
 }
 
+beforeEach(() => {
+  const kernel = new Kernel()
+  kernel.setGlobal()
+})
+
 describe("dependency injection", () => {
   test("uses default implementations", async () => {
-    const kernel = new Kernel()
-    await expect(kernel.create(UsersController).show("1")).resolves.toEqual({
+    await expect(ShowUserAction.invoke("1")).resolves.toEqual({
       id: "1",
       name: "John",
     })
@@ -50,7 +54,9 @@ describe("dependency injection", () => {
       ),
     )
 
-    await expect(kernel.create(UsersController).show("1")).resolves.toEqual({
+    await expect(
+      ShowUserAction.withKernel(kernel).invoke("1"),
+    ).resolves.toEqual({
       id: "9",
       name: "Fake",
     })
@@ -58,6 +64,7 @@ describe("dependency injection", () => {
 
   test("can inject singletons", async () => {
     const kernel = new Kernel()
+    kernel.setGlobal()
     kernel.bind(
       UserRepo,
       class TestRepo {
@@ -69,15 +76,15 @@ describe("dependency injection", () => {
       "singleton",
     )
 
-    await expect(kernel.create(UsersController).show("1")).resolves.toEqual({
+    await expect(ShowUserAction.invoke("1")).resolves.toEqual({
       id: "1",
       name: "John 1",
     })
-    await expect(kernel.create(UsersController).show("1")).resolves.toEqual({
+    await expect(ShowUserAction.invoke("1")).resolves.toEqual({
       id: "1",
       name: "John 2",
     })
-    await expect(kernel.create(UsersController).show("1")).resolves.toEqual({
+    await expect(ShowUserAction.invoke("1")).resolves.toEqual({
       id: "1",
       name: "John 3",
     })
