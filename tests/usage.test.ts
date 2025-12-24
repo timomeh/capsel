@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from "vitest"
 import { createModule, Kernel } from "../src"
+import { setGlobalKernel } from "../src/kernel-global"
 
 const users: Record<string, { id: string; name: string }> = {
   "1": { id: "1", name: "John" },
@@ -32,7 +33,7 @@ class ShowUserAction extends Users.Action {
 
 beforeEach(() => {
   const kernel = new Kernel()
-  kernel.setGlobal()
+  setGlobalKernel(kernel)
 })
 
 describe("dependency injection", () => {
@@ -64,7 +65,7 @@ describe("dependency injection", () => {
 
   test("can inject singletons", async () => {
     const kernel = new Kernel()
-    kernel.setGlobal()
+    setGlobalKernel(kernel)
     kernel.bind(
       UserRepo,
       class TestRepo {

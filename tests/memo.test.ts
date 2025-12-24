@@ -1,5 +1,6 @@
 import { beforeEach, expect, test, vi } from "vitest"
 import { createModule, Kernel } from "../src"
+import { setGlobalKernel } from "../src/kernel-global"
 
 const users: Record<string, { id: string; name: string }> = {
   "1": { id: "1", name: "John" },
@@ -42,7 +43,7 @@ class UserService extends Users.Service {
 }
 
 const kernel = new Kernel()
-kernel.setGlobal()
+setGlobalKernel(kernel)
 
 beforeEach(() => {
   findMock.mockClear()

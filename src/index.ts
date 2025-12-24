@@ -1,2 +1,5 @@
-export { getGlobalKernel, Kernel, setGlobalKernel } from "./kernel"
+export { Kernel } from "./kernel"
+export { runWithKernel } from "./kernel-als"
+export { setCurrentKernelFn } from "./kernel-current"
+export { setGlobalKernel } from "./kernel-global"
 export { createModule } from "./modules"

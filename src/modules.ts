@@ -1,5 +1,6 @@
 import { tokenizedDependency } from "./dependencies"
-import { getGlobalKernel, Kernel } from "./kernel"
+import type { Kernel } from "./kernel"
+import { getInvokeKernel } from "./kernel-invoke"
 import { Memoizable } from "./memo"
 import type { InstantiableClass, Scope } from "./types"
 
@@ -91,10 +92,9 @@ export function createModule<const ModuleName extends string>(
       this: new () => TAction,
       ...args: Parameters<TAction["handle"]>
     ): TResult {
-      const kernel = getGlobalKernel() || new Kernel()
-      const scoped = kernel.scoped()
+      const kernel = getInvokeKernel()
       // biome-ignore lint/complexity/noThisInStatic: it's fine
-      const instance = scoped.create(this)
+      const instance = kernel.create(this)
       return instance.handle(...args) as TResult
     }
 
