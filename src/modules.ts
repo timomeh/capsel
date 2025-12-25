@@ -18,10 +18,17 @@ type Scoped = {
 type ModuleClass<
   ModuleName extends string,
   LayerName extends Layer = Layer,
-> = InstantiableClass<unknown> & Branded<ModuleName, LayerName> & Scoped
+> = InstantiableClass<unknown> &
+  Branded<ModuleName, LayerName> &
+  Scoped & {
+    readonly unwrap?: PropertyKey
+  }
 
 type LayerOf<T> = T extends ModuleClass<string, infer L> ? L : never
-type ForbiddenCrossModuleClass = ModuleClass<string, Exclude<Layer, "facade">>
+type ForbiddenCrossModuleClass = ModuleClass<
+  string,
+  Exclude<Layer, "facade" | "resource">
+>
 type AllowedDependency<
   ModuleName extends string,
   Key,
@@ -38,13 +45,28 @@ class ClassBrand<ModuleName extends string, LayerName extends Layer> {
   ) {}
 }
 
+type UnwrapKey<TKey> = TKey extends { readonly unwrap: infer K }
+  ? K extends PropertyKey
+    ? K
+    : never
+  : never
+
+// biome-ignore lint/suspicious/noExplicitAny: needs for ts
+type Injected<TKey extends abstract new (...args: any[]) => any> = [
+  UnwrapKey<TKey>,
+] extends [never]
+  ? InstanceType<TKey>
+  : UnwrapKey<TKey> extends keyof InstanceType<TKey>
+    ? InstanceType<TKey>[UnwrapKey<TKey>]
+    : InstanceType<TKey>
+
 export function createModule<const ModuleName extends string>(
   moduleName: ModuleName,
 ) {
   function inject<TKey extends ModuleClass<string>>(
     key: AllowedDependency<ModuleName, TKey>,
     scope?: Scope,
-  ): InstanceType<TKey> {
+  ): Injected<TKey> {
     if (
       key[BRAND].moduleName !== moduleName &&
       key[BRAND].layerName !== "facade"
@@ -56,8 +78,9 @@ export function createModule<const ModuleName extends string>(
       )
     }
 
-    const token = tokenizedDependency(key, scope ?? key.scope)
-    return token as unknown as InstanceType<TKey>
+    const unwrap = getUnwrapKey(key)
+    const token = tokenizedDependency(key, scope ?? key.scope, unwrap)
+    return token as unknown as Injected<TKey>
   }
 
   // biome-ignore-start lint/complexity/noStaticOnlyClass: abstract classes
@@ -149,4 +172,13 @@ export function isClass(v: unknown): v is { constructor: Class } {
   return (
     isObject(v) && "constructor" in v && typeof v.constructor === "function"
   )
+}
+
+function getUnwrapKey(v: unknown): PropertyKey | undefined {
+  if (typeof v !== "function" || v === null) return undefined
+  if (!("unwrap" in v)) return undefined
+  const k = (v as { unwrap?: unknown }).unwrap
+  return typeof k === "string" || typeof k === "number" || typeof k === "symbol"
+    ? k
+    : undefined
 }

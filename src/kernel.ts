@@ -1,4 +1,5 @@
 import { getInjectionPoint } from "./dependencies"
+import { invariant } from "./lib/invariant"
 import type { InstantiableClass, Scope } from "./types"
 
 type Token<T = unknown> = InstantiableClass<T> & {
@@ -101,7 +102,30 @@ export class Kernel {
           injectionPoint.scope,
         )
 
-        obj[key] = dependency
+        const unwrap = injectionPoint.unwrap
+        obj[key] =
+          unwrap !== undefined &&
+          dependency !== null &&
+          typeof dependency === "object"
+            ? (dependency as Record<PropertyKey, unknown>)[unwrap]
+            : dependency
+
+        if (injectionPoint.unwrap) {
+          invariant(
+            dependency !== null && dependency !== undefined,
+            `Can't unwrap ${String(injectionPoint.unwrap)}`,
+          )
+          invariant(
+            typeof dependency === "object",
+            `Can't unwrap ${String(injectionPoint.unwrap)} on a dependency with typeof ${typeof dependency}`,
+          )
+
+          obj[key] = (dependency as Record<PropertyKey, unknown>)[
+            injectionPoint.unwrap
+          ]
+        } else {
+          obj[key] = dependency
+        }
       })
   }
 }

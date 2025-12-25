@@ -74,16 +74,18 @@ class UserService extends UserModule.Service {
 }
 
 class UserRepo extends UserModule.Repo {
+  db = this.inject(DbPool)
+
   findById = this.memo((id: string) => {
     // this method is memoized per request.
     // memoized methods can be called like any normal method, but
     // if it's called multiple times with the same args, it's only
     // executed once and the result is cached
-    return db.users.find({ id })
+    return this.db.users.find({ id })
   })
 
   async create(data: UserValues) {
-    const createdUser = await db.users.create({ data })
+    const createdUser = await this.db.users.create({ data })
 
     this.findById.prime(createUser.id).value(createdUser)
     // memoized methods support multiple utilities:
@@ -95,6 +97,19 @@ class UserRepo extends UserModule.Repo {
 
     return createdUser
   }
+}
+
+class DbPool extends UserModule.Resource {
+  // Unwrap a property when injecting the resource.
+  // When another class injects the DbPool with `this.inject(DbPool)`,
+  // this will cause that it doesn't return the instance of the DbPool class,
+  // but directly the `db` key in it.
+  // This prevents that you have to write stuff like `this.db.db.find()`
+  static override unwrap = "db"
+
+  // `Resource` classes are singletons,
+  // so the client will only be initialized once
+  db = new DbClient()
 }
 
 // Billing

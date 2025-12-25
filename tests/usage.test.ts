@@ -2,16 +2,22 @@ import { beforeEach, describe, expect, test, vi } from "vitest"
 import { createModule, Kernel } from "../src"
 import { setGlobalKernel } from "../src/kernel-global"
 
-const users: Record<string, { id: string; name: string }> = {
-  "1": { id: "1", name: "John" },
-  "2": { id: "2", name: "Jane" },
-}
-
 const Users = createModule("Users")
 
+class Db extends Users.Resource {
+  static readonly unwrap = "users"
+
+  users: Record<string, { id: string; name: string }> = {
+    "1": { id: "1", name: "John" },
+    "2": { id: "2", name: "Jane" },
+  }
+}
+
 class UserRepo extends Users.Repo {
+  users = this.inject(Db)
+
   findById = this.memo((id: string) => {
-    return users[id]
+    return this.users[id]
   })
 }
 
