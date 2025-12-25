@@ -4,8 +4,8 @@ import { getInvokeKernel } from "./kernel-invoke"
 import { Memoizable } from "./memo"
 import type { InstantiableClass, Scope } from "./types"
 
-export const BRAND = Symbol("_capsel_brand")
-export const TOKEN = Symbol("_capsel_token")
+export const BRAND = Symbol("_vla_brand")
+export const TOKEN = Symbol("_vla_token")
 
 type Layer = "facade" | "service" | "repo" | "action" | "other"
 

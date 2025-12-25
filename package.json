@@ -5,13 +5,13 @@
   "description": "Data layer kernel for backend- and fullstack apps",
   "author": "Timo Mämecke <hello@timo.wtf>",
   "license": "MIT",
-  "homepage": "https://github.com/timomeh/capsel#readme",
+  "homepage": "https://github.com/timomeh/vla#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/timomeh/capsel.git"
+    "url": "git+https://github.com/timomeh/vla.git"
   },
   "bugs": {
-    "url": "https://github.com/timomeh/capsel/issues"
+    "url": "https://github.com/timomeh/vla/issues"
   },
   "exports": {
     ".": "./dist/index.mjs",

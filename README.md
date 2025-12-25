@@ -1,4 +1,6 @@
-# capsel
+# Vla
+
+_A smooth dutch dessert that goes with everything._
 
 A TypeScript data layer kernel for backend- and fullstack apps. Compatible with whatever framework or library you're using.
 
@@ -18,12 +20,12 @@ A TypeScript data layer kernel for backend- and fullstack apps. Compatible with 
 
 ## Why?
 
-Many fullstack frameworks lack structure and conventions on the backend side (data layer), but they have lots of good structure and conventions on the frontend side (presentation layer). They are still great frameworks and they all have their own strengths. This is where Capsel comes in. It aims to fill in the missing gap in the data layer, allowing you to write well-structured maintainable, scalable and testable code.
+Many fullstack frameworks lack structure and conventions on the backend side (data layer), but they have lots of good structure and conventions on the frontend side (presentation layer). They are still great frameworks and they all have their own strengths. This is where Vla comes in. It aims to fill in the missing gap in the data layer, allowing you to write well-structured maintainable, scalable and testable code.
 
 ## Usage
 
 ```ts
-import { createModule, Kernel } from "capsel"
+import { createModule, Kernel } from "vla"
 
 // Users
 const UserModule = createModule("User")
@@ -124,7 +126,7 @@ const settings = await ShowUserSettingsAction.invoke(userId)
 
 ```tsx
 import { cache } from 'react'
-import { setCurrentKernelFn } from 'capsel'
+import { setCurrentKernelFn } from 'vla'
 import { kernel } from '@/data/kernel'
 
 const kernel = new Kernel()
@@ -157,7 +159,7 @@ async function Page() {
 e.g. sveltekit
 
 ```ts
-import { runWithScope } from "capsel"
+import { runWithScope } from "vla"
 import type { Handle } from "@sveltejs/kit"
 import { kernel } from '@/data/kernel'
 
@@ -178,7 +180,7 @@ export const load: PageServerLoad = async ({ params }) => {
 e.g. express
 
 ```ts
-import { runWithScope } from "capsel"
+import { runWithScope } from "vla"
 import { kernel } from '@/data/kernel'
 
 const app = express()
@@ -240,7 +242,7 @@ Facades are meant as the internal public API to a module, for other modules. Whe
 
 ### How should I structure files and folders?
 
-Roughly follow how capsel structures your code:
+Roughly follow how Vla structures your code:
 
 - Use separate folders for separate modules
 - Create a separate file for each Service, Repo, Facade, Action
@@ -249,11 +251,11 @@ Roughly follow how capsel structures your code:
 
 If you use multiple modules, it's good to separate them into different folders. This allows you to see: if you're importing unproportionally many files from other folders, you have lots of cross-module dependencies, and your data modelling into modules could be improved. 
 
-"How to structure code into files and folders" is often a question of how to manage code dependencies in a way that scales well. Capsel's structure already manages your code dependencies, so it makes sense to align your files and folders on capsel's structure.
+"How to structure code into files and folders" is often a question of how to manage code dependencies in a way that scales well. Vla's structure already manages your code dependencies, so it makes sense to align your files and folders on Vla's structure.
 
 ### Class scopes
 
-Capsel uses dependency injection to load and use classes in other classes. This means that Capsel creates class instances for you and caches them in different caches for different lifetimes. Whenever you call `inject()`, capsel checks the scope of the class and whether an instance is already cached.
+Vla uses dependency injection to load and use classes in other classes. This means that Vla creates class instances for you and caches them in different caches for different lifetimes. Whenever you call `inject()`, Vla checks the scope of the class and whether an instance is already cached.
 
 There are 3 different scopes:
 
@@ -346,7 +348,7 @@ It's not something you'll likely need to use at all. But this shows how the scop
 
 ### Base classes
 
-Capsel gives you multiple base classes to choose from. You can use them as they are or extend them for your own custom base classes.
+Vla gives you multiple base classes to choose from. You can use them as they are or extend them for your own custom base classes.
 
 - `Class` is a generic class with scope `transient`
 - `Singleton` is a `Class` with scope `singleton`
