@@ -1,18 +1,11 @@
 import { getInjectionPoint } from "./dependencies"
-import { invariant } from "./lib/invariant"
-import type { InstantiableClass, Scope } from "./types"
+import type { InstantiableClass, Resolved, Scope, Token } from "./types"
 
-type Token<T = unknown> = InstantiableClass<T> & {
-  readonly scope?: Scope
-}
-type Ctor<T = unknown> = InstantiableClass<T> & {
-  readonly scope?: Scope
-}
+type Ctor<T = unknown> = InstantiableClass<T> & { readonly scope?: Scope }
 
-type Binding<T = unknown> = {
-  impl: Ctor<T>
-  scope: Scope
-}
+type Binding<T = unknown> =
+  | { kind: "class"; impl: Ctor<unknown>; scope: Scope }
+  | { kind: "value"; value: T; scope: Scope }
 
 export class Kernel {
   private readonly singletons = new Map<Token, unknown>()
@@ -35,13 +28,53 @@ export class Kernel {
     return this.bindings.get(key) ?? this.parent?.getBinding(key)
   }
 
-  bind<T>(key: Token<T>, impl: Ctor<unknown>, scope: Scope = "transient") {
+  bind<TKey extends Token>(
+    key: TKey,
+    impl: Ctor<unknown>,
+    scope: Scope = "transient",
+  ) {
     this.singletons.delete(key)
-    this.bindings.set(key, { impl, scope })
+    this.bindings.set(key, { kind: "class", impl, scope })
+  }
+
+  bindValue<TKey extends Token>(
+    key: TKey,
+    value: Resolved<TKey>,
+    scope: Scope = "singleton",
+  ) {
+    this.singletons.delete(key)
+    this.bindings.set(key, { kind: "value", value, scope })
   }
 
   resolve<T>(key: Token<T>, scope?: Scope): T {
     const binding = this.getBinding(key)
+
+    // handle value bindings
+    if (binding?.kind === "value") {
+      const requestedScope = binding?.scope ?? scope ?? "singleton"
+
+      if (requestedScope === "singleton") {
+        if (this.root.singletons.has(key)) {
+          return this.root.singletons.get(key) as T
+        }
+
+        this.root.singletons.set(key, binding.value)
+        return binding.value as T
+      }
+
+      if (requestedScope === "invoke" && !!this.parent) {
+        if (this.invokeCache.has(key)) {
+          return this.invokeCache.get(key) as T
+        }
+
+        this.invokeCache.set(key, binding.value)
+        return binding.value as T
+      }
+
+      return binding.value as T
+    }
+
+    // handle class bindings
     const impl = binding?.impl ?? key
     const requestedScope = binding?.scope ?? scope ?? impl.scope
 
@@ -67,6 +100,31 @@ export class Kernel {
 
     const created = this.instantiate(impl)
     return created as T
+  }
+
+  get<T>(key: Token<T>, scope?: Scope): T {
+    const dependency = this.resolve(key, scope)
+
+    const binding = this.getBinding(key)
+    if (binding?.kind === "value") {
+      return dependency
+    }
+
+    const unwrapKey = getUnwrapKey(key)
+    if (!unwrapKey) {
+      return dependency
+    }
+
+    if (
+      (typeof dependency === "object" && dependency !== null) ||
+      typeof dependency === "function"
+    ) {
+      if (unwrapKey in dependency) {
+        return (dependency as Record<PropertyKey, unknown>)[unwrapKey] as T
+      }
+    }
+
+    return dependency
   }
 
   scoped() {
@@ -97,35 +155,18 @@ export class Kernel {
       })
       .filter((entry) => entry !== null)
       .forEach(([key, injectionPoint]) => {
-        const dependency = this.resolve(
-          injectionPoint.token,
-          injectionPoint.scope,
-        )
+        const dependency = this.get(injectionPoint.token, injectionPoint.scope)
 
-        const unwrap = injectionPoint.unwrap
-        obj[key] =
-          unwrap !== undefined &&
-          dependency !== null &&
-          typeof dependency === "object"
-            ? (dependency as Record<PropertyKey, unknown>)[unwrap]
-            : dependency
-
-        if (injectionPoint.unwrap) {
-          invariant(
-            dependency !== null && dependency !== undefined,
-            `Can't unwrap ${String(injectionPoint.unwrap)}`,
-          )
-          invariant(
-            typeof dependency === "object",
-            `Can't unwrap ${String(injectionPoint.unwrap)} on a dependency with typeof ${typeof dependency}`,
-          )
-
-          obj[key] = (dependency as Record<PropertyKey, unknown>)[
-            injectionPoint.unwrap
-          ]
-        } else {
-          obj[key] = dependency
-        }
+        obj[key] = dependency
       })
   }
+}
+
+function getUnwrapKey(v: unknown): PropertyKey | undefined {
+  if (typeof v !== "function" || v === null) return undefined
+  if (!("unwrap" in v)) return undefined
+  const k = (v as { unwrap?: unknown }).unwrap
+  return typeof k === "string" || typeof k === "number" || typeof k === "symbol"
+    ? k
+    : undefined
 }

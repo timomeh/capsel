@@ -2,7 +2,7 @@ import { tokenizedDependency } from "./dependencies"
 import type { Kernel } from "./kernel"
 import { getInvokeKernel } from "./kernel-invoke"
 import { Memoizable } from "./memo"
-import type { InstantiableClass, Scope } from "./types"
+import type { InstantiableClass, Resolved, Scope } from "./types"
 
 export const BRAND = Symbol("_vla_brand")
 export const TOKEN = Symbol("_vla_token")
@@ -45,28 +45,13 @@ class ClassBrand<ModuleName extends string, LayerName extends Layer> {
   ) {}
 }
 
-type UnwrapKey<TKey> = TKey extends { readonly unwrap: infer K }
-  ? K extends PropertyKey
-    ? K
-    : never
-  : never
-
-// biome-ignore lint/suspicious/noExplicitAny: needs for ts
-type Injected<TKey extends abstract new (...args: any[]) => any> = [
-  UnwrapKey<TKey>,
-] extends [never]
-  ? InstanceType<TKey>
-  : UnwrapKey<TKey> extends keyof InstanceType<TKey>
-    ? InstanceType<TKey>[UnwrapKey<TKey>]
-    : InstanceType<TKey>
-
 export function createModule<const ModuleName extends string>(
   moduleName: ModuleName,
 ) {
   function inject<TKey extends ModuleClass<string>>(
     key: AllowedDependency<ModuleName, TKey>,
     scope?: Scope,
-  ): Injected<TKey> {
+  ): Resolved<TKey> {
     if (
       key[BRAND].moduleName !== moduleName &&
       key[BRAND].layerName !== "facade"
@@ -78,9 +63,8 @@ export function createModule<const ModuleName extends string>(
       )
     }
 
-    const unwrap = getUnwrapKey(key)
-    const token = tokenizedDependency(key, scope ?? key.scope, unwrap)
-    return token as unknown as Injected<TKey>
+    const token = tokenizedDependency(key, scope ?? key.scope)
+    return token as unknown as Resolved<TKey>
   }
 
   // biome-ignore-start lint/complexity/noStaticOnlyClass: abstract classes
@@ -172,13 +156,4 @@ export function isClass(v: unknown): v is { constructor: Class } {
   return (
     isObject(v) && "constructor" in v && typeof v.constructor === "function"
   )
-}
-
-function getUnwrapKey(v: unknown): PropertyKey | undefined {
-  if (typeof v !== "function" || v === null) return undefined
-  if (!("unwrap" in v)) return undefined
-  const k = (v as { unwrap?: unknown }).unwrap
-  return typeof k === "string" || typeof k === "number" || typeof k === "symbol"
-    ? k
-    : undefined
 }

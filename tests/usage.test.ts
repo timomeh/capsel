@@ -96,6 +96,23 @@ describe("dependency injection", () => {
       name: "John 3",
     })
   })
+
+  test("can inject a value", async () => {
+    const kernel = new Kernel()
+    setGlobalKernel(kernel)
+    kernel.bindValue(
+      Db,
+      {
+        "1": { id: "9", name: "Fake" },
+      },
+      "singleton",
+    )
+
+    await expect(ShowUserAction.invoke("1")).resolves.toEqual({
+      id: "9",
+      name: "Fake",
+    })
+  })
 })
 
 describe("cross-module injections", () => {
