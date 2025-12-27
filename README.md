@@ -16,6 +16,9 @@ A TypeScript data layer kernel for backend- and fullstack apps. Compatible with 
 - Memoziation for Repos
 - request-based context with AsyncLocalStorage
 - first-class context injection
+- 🏗️ auto tracing
+- 🏗️ input validation
+- 🏗️ error handling
 - ...
 
 ## Why?
