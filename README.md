@@ -28,9 +28,9 @@ Many fullstack frameworks lack structure and conventions on the backend side (da
 import { Kernel, createModule, createContext, setGlobalKernel } from "vla"
 
 // Users
-const UserModule = createModule("User")
+const Users = createModule("Users")
 
-class ShowUserSettingsAction extends UserModule.Action {
+class ShowUserSettings extends Users.Action {
   users = this.inject(UserService)
 
   async handle(userId: string) {
@@ -42,7 +42,7 @@ class ShowUserSettingsAction extends UserModule.Action {
   }
 }
 
-class UserService extends UserModule.Service {
+class UserService extends Users.Service {
   repo = this.inject(UserRepo)
   billing = this.inject(BillingFacade)
   session = this.inject(SessionFacade)
@@ -74,7 +74,7 @@ class UserService extends UserModule.Service {
   }
 }
 
-class SessionFacade extends UserModule.Facade {
+class SessionFacade extends Users.Facade {
   ctx = this.inject(ReqContext)
   repo = this.inject(UserRepo)
 
@@ -85,8 +85,8 @@ class SessionFacade extends UserModule.Facade {
   }
 }
 
-class UserRepo extends UserModule.Repo {
-  db = this.inject(DbPool)
+class UserRepo extends Users.Repo {
+  db = this.inject(Database)
 
   findById = this.memo((id: string) => {
     // this method is memoized per request.
@@ -111,13 +111,13 @@ class UserRepo extends UserModule.Repo {
   }
 }
 
-class DbPool extends UserModule.Resource {
-  // Unwrap a property when injecting the resource.
-  // When another class injects the DbPool with `this.inject(DbPool)`,
-  // this will cause that it doesn't return the instance of the DbPool class,
-  // but directly the `db` key in it.
-  // This prevents that you have to write stuff like `this.db.db.find()`
+class Database extends UserModule.Resource {
   static override unwrap = "db"
+  // Unwraps a property when injecting the resource:
+  // When another class injects the database with `this.inject(Database)`,
+  // the `unwrap` will cause that it doesn't return the instance of the
+  // Database class, but the `db` property of it.
+  // This prevents that you have to write stuff like `this.db.db.find()`
 
   // `Resource` classes are singletons,
   // so the client will only be initialized once
@@ -125,7 +125,7 @@ class DbPool extends UserModule.Resource {
 }
 
 // Billing
-const BillingModule = createModule("Billing")
+const Billing = createModule("Billing")
 
 class BillingFacade extends Billing.Facade {
   repo = this.inject(BillingRepo)
@@ -151,7 +151,7 @@ setGlobalKernel(kernel) // define as global instance
 // just an example. you should use a scoped context instead (see below)
 kernel.context(ReqContext, { cookies: req.cookies })
 
-const settings = await ShowUserSettingsAction.invoke(userId)
+const settings = await ShowUserSettings.invoke(userId)
 // -> { timezone: 'GMT+1', hasSubscription: true }
 ```
 
@@ -175,13 +175,13 @@ setCurrentKernelFn(cache(() => {
 }))
 
 async function Layout() {
-  const settings = await ShowUserSettingsAction.invoke(userId)
+  const settings = await ShowUserSettings.invoke(userId)
 
   return <div><Page /></div>
 }
 
 async function Page() {
-  const settings = await ShowUserSettingsAction.invoke(userId)
+  const settings = await ShowUserSettings.invoke(userId)
   // it will not query the db twice. it will use the memoized db query
 
   return (
@@ -211,7 +211,7 @@ import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {
   return {
-    settings: await ShowUserSettingsAction.invoke(userId)
+    settings: await ShowUserSettings.invoke(userId)
   }
 }
 ```
@@ -224,10 +224,13 @@ import { kernel } from '@/data/kernel'
 
 const app = express()
 
-express.use((req, res, next) => runWithScope(kernel.scoped(), () => next()))
+express.use((req, res, next) => {
+  const scope = kernel.scoped().context(CustomContext, { req })
+  return runWithScope(scope, () => next()))
+}
 
 app.get("/users/:id", async (req, res) => {
-  const settings = await ShowUserSettingsAction.invoke(req.params.id)
+  const settings = await ShowUserSettings.invoke(req.params.id)
   res.json({ data: settings })
 })
 ```
@@ -258,7 +261,13 @@ test("returns some user settings", async () => {
     ),
   )
 
-  await expect(ShowUserSettingsAction.withKernel(kernel).invoke("1")).resolves.toEqual({
+  // mock a context
+  kernel.bindValue(
+    ReqContext,
+    { cookies: { currentUserId: 1 }}
+  )
+
+  await expect(ShowUserSettings.withKernel(kernel).invoke("1")).resolves.toEqual({
     timezone: "faked",
     hasSubscription: true
   })
