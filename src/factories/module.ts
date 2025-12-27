@@ -3,6 +3,7 @@ import { BaseFacade } from "../classes/facade"
 import { BaseRepo } from "../classes/repo"
 import { BaseResource } from "../classes/resource"
 import { BaseService } from "../classes/service"
+import { DevStable } from "../concerns/devstable"
 import { createInjectable } from "../concerns/injectable"
 import { Memoizable } from "../concerns/memo"
 
@@ -23,7 +24,7 @@ export function createModule<const ModuleName extends string>(
   abstract class Action extends Injectable(BaseAction) {
     static readonly __vla_module = moduleName
   }
-  abstract class Resource extends Injectable(BaseResource) {
+  abstract class Resource extends Injectable(DevStable(BaseResource)) {
     static readonly __vla_module = moduleName
   }
 
@@ -33,6 +34,9 @@ export function createModule<const ModuleName extends string>(
     Repo,
     Action,
     Resource,
+
+    // composable concerns
     Memoizable,
+    DevStable,
   }
 }
