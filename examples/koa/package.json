@@ -9,10 +9,10 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
+    "@koa/router": "15.1.1",
     "koa": "3.1.1",
     "koa-bodyparser": "4.4.1",
     "koa-ejs": "4.3.0",
-    "koa-router": "14.0.0",
     "vla": "workspace:*"
   },
   "devDependencies": {
