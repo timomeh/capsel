@@ -21,6 +21,12 @@ A TypeScript data layer kernel for backend- and fullstack apps. Compatible with 
 - 🏗️ error handling
 - ...
 
+## Install
+
+```console
+npm install vla
+```
+
 ## Why?
 
 Many fullstack frameworks lack structure and conventions on the backend side (data layer), but they have lots of good structure and conventions on the frontend side (presentation layer). They are still great frameworks and they all have their own strengths. This is where Vla comes in. It aims to fill in the missing gap in the data layer, allowing you to write well-structured maintainable, scalable and testable code.
