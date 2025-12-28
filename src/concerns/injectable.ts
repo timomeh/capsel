@@ -1,5 +1,5 @@
 import { tokenizedDependency } from "../lib/tokenizeDeps"
-import type { Layer, ModuleClass, Resolved, Scope } from "../types"
+import type { Layer, ModuleClass, Resolved, Scope, UserSurface } from "../types"
 
 type AllowedDependency<
   ModuleName extends string,
@@ -39,7 +39,7 @@ export interface InjectCapable<
   inject<TKey extends ModuleClass<string>>(
     key: AllowedDependency<ModuleName, ParentLayer, TKey>,
     scope?: Scope,
-  ): Resolved<TKey>
+  ): UserSurface<Resolved<TKey>>
 }
 
 export function createInjectable<ModuleName extends string>() {
@@ -53,7 +53,7 @@ export function createInjectable<ModuleName extends string>() {
       inject<TKey extends ModuleClass<string>>(
         key: AllowedDependency<ModuleName, ParentLayer, TKey>,
         scope?: Scope,
-      ): Resolved<TKey> {
+      ): UserSurface<Resolved<TKey>> {
         const parentClass = this.constructor as typeof Base & ClassBase
         const parentModule = parentClass.__vla_module
         const parentLayer = parentClass.__vla_layer
@@ -84,7 +84,7 @@ export function createInjectable<ModuleName extends string>() {
         }
 
         const token = tokenizedDependency(targetKey, scope ?? targetKey.scope)
-        return token as unknown as Resolved<TKey>
+        return token as unknown as UserSurface<Resolved<TKey>>
       }
     }
 
