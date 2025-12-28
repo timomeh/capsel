@@ -7,7 +7,7 @@ export default function Home() {
     <div>
       <h1>Posts</h1>
       <CreatePostForm />
-      <hr style={{ marginTop: 10, marginBottom: 10 }} />
+      <hr />
       <PostList />
     </div>
   )
@@ -27,7 +27,6 @@ async function PostList() {
           <small>
             {post.createdAt.toISOString()} • ID: {post.id}
           </small>
-          <hr />
         </article>
       ))}
     </div>
@@ -47,7 +46,7 @@ async function CreatePostForm() {
         revalidatePath("/")
       }}
     >
-      <textarea name="content" />
+      <textarea name="content" placeholder="What's on your mind?" required />
       <br />
       <button type="submit">Submit</button>
       {" • "}
