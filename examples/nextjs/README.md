@@ -18,6 +18,11 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - Server Actions for post creation
 - Session management with cookies
 
+## Endpoints
+
+- `GET /` - HTML page with posts listing and creation form
+- `GET /api/posts` - Get posts as JSON
+
 ## Project Structure
 
 - `src/app/` - Next.js App Router pages and layouts
