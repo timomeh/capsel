@@ -1,7 +1,7 @@
 {
   "name": "vla",
   "type": "module",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Data layer kernel for backend- and fullstack apps",
   "author": "Timo Mämecke <hello@timo.wtf>",
   "license": "MIT",
