@@ -1,0 +1,30 @@
+---
+title: Repo
+description: Understanding Repos in Vla's architecture
+---
+
+Repo (Repositories) handle data access and external adapters. They're the only layer that should communicate with databases, APIs, or other external services.
+
+```ts
+class PostRepo extends Vla.Repo {
+  db = this.inject(Database)
+
+  findById = this.memo((id: string) => {
+    return this.db.posts.find({ id })
+  })
+
+  async create(data: PostData) {
+    return this.db.posts.create({ data })
+  }
+}
+```
+
+## When to use
+
+- Database queries
+- external API calls
+- file system access
+
+## Scope
+
+`invoke` (shared within a request)

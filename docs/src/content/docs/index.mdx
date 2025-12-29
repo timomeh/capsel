@@ -1,0 +1,94 @@
+---
+title: Smooth TypeScript Backends
+head:
+  - tag: title
+    content: Vla | Smooth TypeScript Backends
+description: A TypeScript data layer kernel for backend and fullstack apps
+template: splash
+hero:
+  title: Smooth<br />TypeScript Backends
+  tagline: Vla is the missing backend layer for scalable TypeScript apps that integrates into any framework and existing codebases.
+  image:
+    file: ../../assets/logo-large.png
+  actions:
+    - text: Get Started
+      link: /guides/getting-started/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/timomeh/vla
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<CardGrid stagger>
+  <Card title="Structured Architecture" icon="setting">
+    Organize code into layers with Actions, Services, Repos, and Facades. Scale with modules when needed.
+  </Card>
+  <Card title="Framework Agnostic" icon="star">
+    Works with Next.js, SvelteKit, Tanstack, Express, and any other server-side framework in TypeScript or JavaScript.
+  </Card>
+  <Card title="Testing Friendly" icon="puzzle">
+    Clean Dependency Injection without decorators or reflection. Write code that's easy to test without module mocks.
+  </Card>
+  <Card title="No Extra Tooling" icon="setting">
+    Install and you're ready. No extra tooling or plugins to configure. No incompatibility when upgrading your framework.
+  </Card>
+</CardGrid>
+
+## Why Vla?
+
+Many fullstack frameworks excel at the presentation layer but lack structure for the data layer. Vla fills this gap, allowing you to write well-structured, maintainable, scalable, and testable backend code.
+
+## Quick Example
+
+```ts
+import { Vla, Kernel } from 'vla'
+
+// Create an action as your entry point
+class ShowUser extends Vla.Action {
+  repo = this.inject(UserRepo)
+
+  async handle(userId: string) {
+    return this.repo.findById(userId)
+  }
+}
+
+// Define a repository for data access
+class UserRepo extends Vla.Repo {
+  db = this.inject(Database)
+
+  // ⭐ built-in memoization
+  findById = this.memo((id: string) => {
+    return this.db.users.find({ id })
+  })
+}
+
+// Use Services for business rules and resources for infrastructure
+class UserService extends Vla.Service {
+  // reusable business rules
+}
+class Database extends Vla.Resource {
+  static readonly unwrap "db"
+  db = new FavoriteOrm()
+}
+
+// Grow your app with Modules and Facades
+const Billing = Vla.createModule("Billing")
+class BillingFacade extends Billing.Facade {
+  // Facades are public interfaces for cross-module dependencies
+}
+
+// Initialize Vla's Kernel
+const kernel = new Vla.Kernel()
+Vla.setGlobalInvokeKernel(kernel)
+
+// Invoke from your framework
+const user = await ShowUser.invoke(userId)
+```
+
+## Get Started
+
+Ready to add some smooth deliciousness to your backend? Check out the [Getting Started guide](/guides/getting-started/) to begin using Vla in your project.

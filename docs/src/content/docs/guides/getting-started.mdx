@@ -1,0 +1,295 @@
+---
+title: Getting Started
+description: Install and start using Vla in your project
+---
+
+Get up and running with Vla in minutes. This guide will walk you through installation, basic setup, and your first Action.
+
+## Installation
+
+Install Vla using your preferred package manager:
+
+```bash
+npm install vla
+```
+
+```bash
+pnpm add vla
+```
+
+```bash
+yarn add vla
+```
+
+```bash
+bun add vla
+```
+
+## Basic Setup
+
+Vla works with any server-side JavaScript framework. The basic setup involves:
+
+1. Creating a Kernel
+2. Setting up the Kernel for invocation
+3. Creating your first classes
+
+import { Steps } from '@astrojs/starlight/components'
+
+### 1. Create a Kernel
+
+The Kernel is Vla's dependency injection container. Create one in a central location:
+
+```ts
+// src/data/kernel.ts
+import { Vla } from "vla"
+
+export const kernel = new Vla.Kernel()
+```
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components'
+
+Then setup the Kernel for invocation, so Vla knows what request context it's in.
+
+<Tabs syncKey="framework">
+  <TabItem label="Middleware">
+    For any framework that supports middleware to wrap a request, often with a `next()` function:
+
+    ```ts
+    // src/app.ts
+    import { Vla } from "vla"
+    import { kernel } from "./data/kernel"
+
+    const app = express() // or anything else
+
+    app.use((req, res, next) => {
+      return Vla.withKernel(kernel.scoped(), () => next())
+    })
+    ```
+  </TabItem>
+  <TabItem label="Next.js (App Router)">
+    Next.js has no middleware, but we can pass React's `cache()` into Vla, so it can create a new scope
+    for every request.
+
+    ```ts
+    // src/data/kernel.ts
+    import { cache } from "react"
+    import { Vla } from "vla"
+
+    export const kernel = new Vla.Kernel()
+
+    Vla.setInvokeKernelProvider(
+      cache(() => kernel.scoped())
+    )
+    ```
+
+    And import it in your layout:
+
+    ```ts
+    // src/app/layout.ts
+    import "../data/kernel"
+
+    export default function RootLayout() {
+      //
+    }
+    ```
+    <Aside>This works because `cache()` returns a new scoped Kernel for every server request.</Aside>
+  </TabItem>
+  <TabItem label="SvelteKit">
+    SvelteKit has "Hooks" that work like middleware:
+
+    ```ts
+    // src/hooks.server.ts
+    import type { Handle } from "@sveltejs/kit"
+    import { Vla } from "vla"
+    import { kernel } from "./data/kernel"
+
+    export const handle: Handle = async ({ event, resolve }) => {
+      return Vla.withKernel(kernel.scoped(), () => {
+        return resolve(event)
+      })
+    }
+    ```
+  </TabItem>
+  <TabItem label="Tanstack Start">
+    Tanstack Start support global request middleware:
+
+    ```ts
+    // src/start.ts
+    import { createMiddleware, createStart } from "@tanstack/react-start"
+    import { Vla } from "vla"
+    import { kernel } from "./data/kernel"
+
+    const vlaMiddleware = createMiddleware().server(async ({ next }) => {
+      return Vla.withKernel(kernel.scoped(), () => next())
+    })
+
+    export const startInstance = createStart(() => {
+      return {
+        requestMiddleware: [vlaMiddleware],
+      }
+    })
+    ```
+  </TabItem>
+  <TabItem label="Other">
+    <Aside type="tip">For more examples, check out the [examples on GitHub](https://github.com/timomeh/vla/tree/main/examples).</Aside>
+
+    Most server-side frameworks or libraries support middleware in some way. You can call `Vla.withKernel()` inside your middleware
+
+    ```ts
+    // src/middleware.ts
+    import { Vla } from "vla"
+    import { kernel } from "./data/kernel"
+
+    export function middleware((req, res, next)) {
+      const scoped = kernel.scoped()
+      return Vla.withKernel(scoped, () => next())
+    }
+    ```
+
+    If you do not have requests and don't need separate scopes per request, you can set a global kernel:
+
+    ```ts
+    // src/data/kernel.ts
+    import { Vla } from "vla"
+
+    export const kernel = new Vla.Kernel()
+    Vla.setGlobalInvokeKernel(kernel.scoped())
+    ```
+  </TabItem>
+</Tabs>
+
+### 2. Write your First Action
+
+Actions are entry points to your data layer. They're invoked from your framework's route handlers, server actions, or API endpoints.
+
+```ts
+// src/data/users.actions.ts
+import { Vla } from "vla"
+import { UserRepo } from "./users.repo"
+
+export class GetUser extends Vla.Action {
+  repo = this.inject(UserRepo)
+
+  async handle(params: YourFrameworkParams) {
+    return this.repo.findById(params.id)
+  }
+}
+```
+
+```ts
+// src/data/users.repo.ts
+import { Vla } from "vla"
+import { Db } from "./db"
+
+class UserRepo extends Vla.Repo {
+  db = this.inject(Db)
+
+  findById = this.memo((id: string) => {
+    return this.users[id]
+  })
+}
+```
+
+```ts
+// src/data/db.ts
+import { Vla } from "vla"
+
+class Db extends Vla.Resource {
+  // Mock database for this example
+  db = {
+    users: {
+      "1": { id: "1", name: "Alice", email: "alice@example.com" },
+      "2": { id: "2", name: "Bob", email: "bob@example.com" }
+    }
+  }
+
+  static readonly unwrap = "db"
+}
+```
+
+### 3. Invoke Actions in Your Framework
+
+Actions can be invoked from anywhere in your application:
+
+<Tabs syncKey="framework">
+  <TabItem label="Next.js (App Router)">
+    ```tsx
+    // app/users/[id]/page.tsx
+    import { GetUser } from "@/data/users.actions"
+
+    export default async function UserPage({ params }) {
+      const user = await GetUser.invoke(params)
+
+      return (
+        <div>
+          <h1>{user.name}</h1>
+          <p>{user.email}</p>
+        </div>
+      )
+    }
+    ```
+  </TabItem>
+  <TabItem label="SvelteKit">
+    ```ts
+    // src/routes/users/[id]/+page.server.ts
+    import { GetUser } from "$lib/data/users.actions"
+    import type { PageServerLoad } from "./$types"
+
+    export const load: PageServerLoad = async ({ params }) => {
+      const user = await GetUser.invoke(params)
+      return { user }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Tanstack Start">
+    Tanstack Start support global request middleware:
+
+    ```ts
+    // src/routes/index.ts
+    import { createFileRoute } from "@tanstack/react-router"
+    import { createServerFn } from "@tanstack/react-start"
+    import { GetUser } from "../data/users.actions"
+
+    const getUserFn = createServerFn({ method: "GET" }).handler(async () => {
+      const user = await GetUser.invoke(params)
+      return { user }
+    })
+
+    export const Route = createFileRoute("/")({
+      component: Home,
+      loader: () => getUserFn(),
+    })
+
+    function Home() {
+      const { user } = Route.useLoaderData()
+    }
+    ```
+  </TabItem>
+  <TabItem label="Other">
+    <Aside type="tip">For more examples, check out the [examples on GitHub](https://github.com/timomeh/vla/tree/main/examples).</Aside>
+
+    ```ts
+    // routes/users.ts
+    import express from "express"
+    import { GetUser } from "./data/users.actions"
+
+    const app = express()
+
+    app.get('/users/:id', async (req, res) => {
+      const user = await GetUser.invoke(req.params)
+      res.json(user)
+    })
+    ```
+  </TabItem>
+</Tabs>
+
+## Next Steps
+
+Now that you have Vla set up, learn about:
+
+- [Core Concepts](/guides/core-concepts/) - Understanding modules, classes, and dependency injection
+- [Memoization](/guides/memoization/) - Optimize database queries with built-in memoization
+- [Context](/guides/context/) - Access request context in your classes
+- [Testing](/guides/testing/) - Write testable code without mocks
+- [Framework Integration](/guides/framework-integration/) - Deep integration with your framework

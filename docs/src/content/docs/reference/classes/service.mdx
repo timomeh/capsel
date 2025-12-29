@@ -1,0 +1,37 @@
+---
+title: Service
+description: Understanding Services in Vla's architecture
+---
+
+Services contain your business logic. They orchestrate between repositories, other services, and facades.
+
+```ts
+class PostService extends Vla.Service {
+  repo = this.inject(PostRepo)
+  session = this.inject(SessionService)
+
+  async create(data: PostData) {
+    const currentUser = await this.session.currentUser()
+
+    if (!currentUser.canPost) {
+      throw new Error('Unauthorized')
+    }
+
+    return this.repo.create({
+      ...data,
+      authorId: currentUser.id
+    })
+  }
+}
+```
+
+## When to use
+
+- Business logic
+- validation
+- authorization
+- orchestration
+
+## Scope
+
+`invoke` (shared within a request)

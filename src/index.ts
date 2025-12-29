@@ -1,5 +1,6 @@
 import { createContext, createModule } from "./factories"
 import {
+  Kernel,
   setGlobalInvokeKernel,
   setInvokeKernelProvider,
   withKernel,
@@ -16,4 +17,5 @@ export const Vla = {
   withKernel,
   setGlobalInvokeKernel,
   setInvokeKernelProvider,
+  Kernel,
 }

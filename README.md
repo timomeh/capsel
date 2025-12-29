@@ -125,7 +125,7 @@ class UserRepo extends Users.Repo {
 }
 
 class Database extends Vla.Resource {
-  static override unwrap = "db"
+  static readonly unwrap = "db"
   // Unwraps a property when injecting the resource:
   // When another class injects the database with `this.inject(Database)`,
   // the `unwrap` will cause that it doesn't return the instance of the

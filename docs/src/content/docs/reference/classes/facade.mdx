@@ -1,0 +1,39 @@
+---
+title: Facade
+description: Understanding Facades in Vla's architecture
+---
+
+Facades provide a public API for cross-module access. When one module needs to use functionality from another module, it should inject a Facade, not a Service or Repo.
+
+Invalid cross-module access will result in a build error and runtime exception.
+
+```ts
+// data/users/user.facade.ts
+class UserFacade extends Users.Facade {
+  service = this.inject(UserService)
+
+  async getUser(id: string) {
+    return this.service.getById(id)
+  }
+}
+```
+
+```ts
+// data/posts/post.service.ts
+class PostService extends Posts.Service {
+  users = this.inject(UserFacade) // Cross-module access
+
+  async createPost(userId: string, data: PostData) {
+    const user = await this.users.getUser(userId)
+    // ...
+  }
+}
+```
+
+## When to use
+
+- Public interface for cross-module dependencies
+
+## Scope
+
+`transient` (new instance per usage)

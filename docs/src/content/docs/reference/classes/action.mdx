@@ -1,0 +1,29 @@
+---
+title: Action
+description: Understanding Actions in Vla's architecture
+---
+
+Actions are entry points to your data layer. They're invoked from your framework's route handlers, server actions, or API endpoints.
+
+```ts
+class CreatePost extends Vla.Action {
+  posts = this.inject(PostService)
+
+  async handle(title: string, content: string) {
+    return this.posts.create({ title, content })
+  }
+}
+
+// Invoke from your framework
+const post = await CreatePost.invoke("Hello", "World")
+```
+
+## When to use
+
+- Entry points for user requests
+- Server actions
+- API handlers
+
+## Scope
+
+`transient` (new instance per invocation)
