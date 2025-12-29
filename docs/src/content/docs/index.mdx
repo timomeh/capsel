@@ -7,7 +7,12 @@ description: A TypeScript data layer kernel for backend and fullstack apps
 template: splash
 hero:
   title: Smooth<br />TypeScript Backends
-  tagline: Vla is the missing backend layer for scalable TypeScript apps that integrates into any framework and existing codebases.
+  tagline: |
+    Vla is the missing backend layer for scalable TypeScript apps that integrates
+    into any framework and existing codebases.
+    <p style="line-height:1;margin-top:16px">
+    <small style="font-size:0.8rem">Vla is also a smooth, pudding-like Dutch dessert that goes with everything.</small>
+    </p>
   image:
     file: ../../assets/logo-large.png
   actions:
@@ -45,7 +50,7 @@ Many fullstack frameworks excel at the presentation layer but lack structure for
 ## Quick Example
 
 ```ts
-import { Vla, Kernel } from 'vla'
+import { Vla } from 'vla'
 
 // Create an action as your entry point
 class ShowUser extends Vla.Action {
@@ -72,7 +77,8 @@ class UserService extends Vla.Service {
 }
 class Database extends Vla.Resource {
   static readonly unwrap "db"
-  db = new FavoriteOrm()
+  db = this.devStable("db", () => new FavoriteOrm())
+  // ⭐ devStable() prevents creating new clients in hot-reload dev mode
 }
 
 // Grow your app with Modules and Facades

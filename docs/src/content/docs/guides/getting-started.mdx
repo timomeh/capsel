@@ -164,9 +164,8 @@ Then setup the Kernel for invocation, so Vla knows what request context it's in.
 Actions are entry points to your data layer. They're invoked from your framework's route handlers, server actions, or API endpoints.
 
 ```ts
-// src/data/users.actions.ts
+// src/data/users.ts
 import { Vla } from "vla"
-import { UserRepo } from "./users.repo"
 
 export class GetUser extends Vla.Action {
   repo = this.inject(UserRepo)
@@ -175,25 +174,14 @@ export class GetUser extends Vla.Action {
     return this.repo.findById(params.id)
   }
 }
-```
-
-```ts
-// src/data/users.repo.ts
-import { Vla } from "vla"
-import { Db } from "./db"
 
 class UserRepo extends Vla.Repo {
   db = this.inject(Db)
 
   findById = this.memo((id: string) => {
-    return this.users[id]
+    return this.db.users[id]
   })
 }
-```
-
-```ts
-// src/data/db.ts
-import { Vla } from "vla"
 
 class Db extends Vla.Resource {
   // Mock database for this example
@@ -207,6 +195,8 @@ class Db extends Vla.Resource {
   static readonly unwrap = "db"
 }
 ```
+
+<Aside type="tip">Once your app grows, it's recommended to move your classes into separate files.</Aside>
 
 ### 3. Invoke Actions in Your Framework
 
