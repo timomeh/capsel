@@ -51,7 +51,7 @@ class UserRepo extends Vla.Repo {
 - **Clear Architecture** – Actions, Services, Repos, Resources, and Facades for organized code
 - **Clean Dependency Injection** - No decorators, no reflection, just `this.inject()`
 - **Built-in Memoization** – Automatic request-scoped caching for database queries
-- **Easy Testing** – Test classes, not file paths—no more brittle module mocks
+- **Easy Testing** – Test classes, not file paths, no more brittle module mocks
 - **Module System** – Scale to large apps with domain-separated modules and Facades
 - **Request Context** – First-class context injection with AsyncLocalStorage
 - **Tree Shakeable** – Only bundle what you use

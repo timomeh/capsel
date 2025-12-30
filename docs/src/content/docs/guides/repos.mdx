@@ -65,7 +65,7 @@ Learn more about memoization in the [Memoization guide](/guides/memoization/).
 ## Key Characteristics
 
 - Repos should not be aware of context like sessions
-- Repos don't check for authorization—that's the service's responsibility
+- Repos don't check for authorization. That's the service's responsibility
 - Repos don't call services
 - Repos can call other repos. When doing so, it's good practice to create a separate repo that combines multiple repos
 - Repos have a scope of `invoke`, meaning all usages during a request share the same instance. This is how memoization works across your entire application

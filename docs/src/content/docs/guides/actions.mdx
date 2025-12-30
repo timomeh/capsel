@@ -76,7 +76,7 @@ class RenderProfileView extends Vla.Action {
 
 ## Key Characteristics
 
-- Actions aren't meant to be reusable—there's usually just one place that invokes a specific action
+- Actions aren't meant to be reusable. There's usually just one place that invokes a specific action
 - Actions should return data optimized for their use case (e.g., the frontend). The frontend shouldn't need to process data further
 - Actions should not invoke other actions
 - Actions can directly query the database, though using repos or services is recommended for better structure
