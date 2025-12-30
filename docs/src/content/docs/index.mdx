@@ -72,7 +72,7 @@ class UserService extends Vla.Service {
   // reusable business rules
 }
 class Database extends Vla.Resource {
-  static readonly unwrap "db"
+  static readonly unwrap = "db"
   db = this.devStable("db", () => new FavoriteOrm())
   // ⭐ devStable() prevents creating new clients in hot-reload dev mode
 }
