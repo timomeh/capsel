@@ -5,7 +5,7 @@ description: Learn how Vla structures your TypeScript backends into layers, modu
 
 Vla structures your backend with common patterns that enforce clean code dependencies: Layers, Modules and Interfaces.
 
-### Layers
+## Layers
 
 Vla organizes code into **layers** that flow in a single direction. Higher layers can use lower layers, but not vice versa.
 
@@ -58,7 +58,7 @@ import { Aside } from '@astrojs/starlight/components';
 Vla enforces these dependency rules. If you try to inject a Service into a Repo (which would break the layer flow), Vla will throw an error.
 </Aside>
 
-### Modules
+## Modules
 
 **Modules** let you separate domains and maintain clear boundaries. Small apps might only need one module (or none at all: use `Vla.Action`, `Vla.Service`, etc.). Larger apps can create multiple modules.
 
@@ -91,7 +91,7 @@ class UserFacade extends Users.Facade {
 If you have a smaller app, you might not need multiple modules at all. A module is a domain that can consist of multiple resources. While you can create separate modules for each resource, you do not need to.
 </Aside>
 
-### Interfaces
+## Interfaces
 
 Vla's layers and modules implicitly result in better interfaces between code dependencies:
 
