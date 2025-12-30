@@ -28,7 +28,57 @@ export default defineConfig({
           href: "https://www.npmjs.com/package/vla",
         },
       ],
-      plugins: [starlightLlmsTxt()],
+      plugins: [
+        starlightLlmsTxt({
+          promote: [
+            "guides/installation*",
+            "guides/actions*",
+            "guides/services*",
+            "guides/repos*",
+            "guides/resources*",
+            "guides/putting-together*",
+            "guides/modules*",
+            "guides/scopes*",
+            "reference/classes/*",
+            "guides/context*",
+            "guides/memoization*",
+            "guides/testing*",
+            "guides/why-vla*",
+          ],
+          customSets: [
+            {
+              label: "Reference",
+              description:
+                "Full reference documentation for Vla's classes and Kernel",
+              paths: ["reference/**"],
+            },
+            {
+              label: "Guides",
+              description: "Guides how to use Vla",
+              paths: ["guides/**"],
+            },
+            {
+              label: "Tutorial",
+              description: "Step by step usage instructions",
+              paths: [
+                "guides/installation*",
+                "guides/actions*",
+                "guides/services*",
+                "guides/repos*",
+                "guides/resources*",
+                "guides/putting-together*",
+                "guides/modules*",
+              ],
+            },
+            {
+              label: "Framework Integrations",
+              description:
+                "Integration Guides for different popular frameworks like Next.js, Express, SvelteKit, Tanstack Start and more",
+              paths: ["frameworks/**"],
+            },
+          ],
+        }),
+      ],
       customCss: ["./src/styles/custom.css"],
       favicon: "/favicon.svg",
       head: [
