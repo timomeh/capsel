@@ -27,6 +27,41 @@ export default defineConfig({
         },
       ],
       customCss: ["./src/styles/custom.css"],
+      favicon: "/favicon.svg",
+      head: [
+        {
+          tag: "link",
+          attrs: {
+            rel: "shortcut icon",
+            href: "/favicon.ico",
+          },
+        },
+        {
+          tag: "link",
+          attrs: {
+            rel: "icon",
+            href: "/favicon-96x96.png",
+            type: "image/png",
+            sizes: "96x96",
+          },
+        },
+        {
+          tag: "link",
+          attrs: {
+            rel: "icon",
+            href: "/favicon.svg",
+            type: "image/svg+xml",
+          },
+        },
+        {
+          tag: "link",
+          attrs: {
+            rel: "apple-touch-icon",
+            href: "/apple-touch-icon.png",
+            sizes: "180x180",
+          },
+        },
+      ],
       sidebar: [
         {
           label: "Getting Started",
