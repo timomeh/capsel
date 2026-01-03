@@ -9,46 +9,98 @@ This page provides recommendations based on your app's size and complexity.
 
 ---
 
+import { FileTree, Aside } from '@astrojs/starlight/components';
+
+## Action Files in your Presentation Layer
+
+Colocate [Actions](/reference/classes/action) in your presentation layer (next to your UI components) in a separate file. Create a `data.ts` file for each group of files, which belong together. Create multiple actions in this `data.ts`.
+
+<FileTree>
+- src/
+  - app/ *Presentation Layer*
+    - posts/
+      - **data.ts**
+      - page.ts
+      - [slug]/
+        - page.ts
+    - authors/
+      - **data.ts**
+      - page.ts
+      - [user]/
+        - **data.ts**
+        - page.ts
+  - components/ *Component Library*
+  - data/ *Data Layer*
+    - users.ts
+    - posts.ts
+    - db.ts
+    - kernel.ts
+</FileTree>
+
+Think of each `data.ts` file like it defines a module boundary in your presentation layer:
+
+- Files inside a folder should only import from their closest `data.ts`.
+- Keep your `components` folder as a reusable component library, which doen't fetch data from the data layer.
+
+For example, using the file structure from above:
+
+- `posts/page.ts` and `/posts/[slug]/page.ts` would only import from `posts/data.ts`. They would not import from `authors/`.
+- `authors/page.ts` would only import from `authors/data.ts`, and not from `posts/data.ts` or `authors/[users]/data.ts`.
+- `authors/[user]/page.ts` would only import from `authors/[user]/page.ts`, and not from `posts/data.ts` or `authors/data.ts`.
+
+<Aside type="tip">
+Most apps won't need to have a `data.ts` file for each folder. Start with a `data.ts` in your presentation layer root, and create another one when you feel like you want to group actions.
+</Aside>
+
 ## File per Model
 
 For small apps or prototypes, keep it simple. A handful of files in a single folder is often enough.
 
-import { FileTree } from '@astrojs/starlight/components';
-
 <FileTree>
-
 - src/
   - app/ *Your framework's routes*
-  - **data/**
-    - **users.ts**
-    - **posts.ts**
-    - db.ts
+  - **data/** *Data Layer*
+    - **users.ts** *Services and Repos*
+    - **posts.ts** *Services and Repos*
+    - db.ts *Resource*
     - kernel.ts *Kernel setup*
-
 </FileTree>
-import { Aside } from '@astrojs/starlight/components';
 
-## Folder per Model
+## Layer suffixes
 
-When your app grows beyond a few classes, organize files by their model (e.g. database resource).
+To split model files into smaller files, you create a file for each layer and give them a suffix, like `.service.ts` and `.repo.ts`.
 
 <FileTree>
-
 - src/
   - app/
   - **data/**
-    - **resources/** *Keep clients global*
+    - resources/
+      - db.ts
+      - redis.ts
+    - **posts.repo.ts**
+    - **posts.service.ts**
+    - **users.repo.ts**
+    - **users.service.ts**
+</FileTree>
+
+## Folder per Model
+
+You can additionally group services and repos by their resource. This is especially helpful if you have multiple services for a model.
+
+<FileTree>
+- src/
+  - app/
+  - **data/**
+    - resources/
       - db.ts
       - redis.ts
     - **posts/**
-      - posts.service.ts
       - posts.repo.ts
-      - posts.actions.ts
+      - posts.service.ts
     - **users/**
-      - users.service.ts
       - users.repo.ts
-      - users.actions.ts
-
+      - users.service.ts
+      - authors.service.ts
 </FileTree>
 
 ## Folder per Module
@@ -56,35 +108,30 @@ When your app grows beyond a few classes, organize files by their model (e.g. da
 For large apps or teams, organize by **modules** to separate domains. Each module has its own directory with its own structure inside.
 
 <FileTree>
-
 - src/
   - app/
   - **data/**
     - kernel.ts
-    - **resources/**
+    - resources/
       - db.ts
       - redis.ts
     - **users/**
-      - user.module.ts
       - user.facade.ts *Public API for other modules*
-      - user.actions.ts
-      - user.service.ts
+      - user.module.ts
       - user.repo.ts
+      - user.service.ts
     - **billing/**
-      - billing.module.ts
       - billing.facade.ts *Public API for other modules*
-      - invoice.actions.ts
-      - invoice.service.ts
+      - billing.module.ts
       - invoice.repo.ts
-      - subscription.service.ts
+      - invoice.service.ts
       - subscription.repo.ts
+      - subscription.service.ts
     - **analytics/**
-      - analytics.module.ts
       - analytics.facade.ts *Public API for other modules*
-      - analytics.actions.ts
-      - analytics.service.ts
+      - analytics.module.ts
       - analytics.repo.ts
-
+      - analytics.service.ts
 </FileTree>
 
 ## Module Growth Patterns
@@ -96,15 +143,12 @@ As a module grows, you can further organize it internally.
 Keep everything flat within the module directory.
 
 <FileTree>
-
 - data/
   - **users/**
-    - user.module.ts
-    - user.actions.ts
-    - user.service.ts
-    - user.repo.ts
     - user.facade.ts
-
+    - user.module.ts
+    - user.repo.ts
+    - user.service.ts
 </FileTree>
 
 ### Group by Model
@@ -112,21 +156,19 @@ Keep everything flat within the module directory.
 Group by model when the module has multiple models.
 
 <FileTree>
-
 - data/
   - **billing/**
     - billing.module.ts
     - billing.facade.ts
     - **invoice/**
-      - invoice.service.ts
       - invoice.repo.ts
+      - invoice.service.ts
     - **subscription/**
-      - subscription.service.ts
       - subscription.repo.ts
+      - subscription.service.ts
     - **payment/**
-      - payment.service.ts
       - payment.repo.ts
-
+      - payment.service.ts
 </FileTree>
 
 ## General Guidelines
@@ -136,7 +178,6 @@ Group by model when the module has multiple models.
 Resources like database clients are typically shared across modules, so keep them in a shared location.
 
 <FileTree>
-
 - data/
   - **resources/**
     - **db.ts**
@@ -144,7 +185,6 @@ Resources like database clients are typically shared across modules, so keep the
     - **s3.ts**
   - users/
   - billing/
-
 </FileTree>
 
 <Aside>
