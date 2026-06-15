@@ -14,7 +14,7 @@ export abstract class BaseAction {
   /** Executes the action with the arguments of the handler. */
   static async invoke<
     TAction extends BaseAction,
-    TResult = ReturnType<TAction["handle"]>,
+    TResult = Awaited<ReturnType<TAction["handle"]>>,
   >(
     this: new () => TAction,
     ...args: Parameters<TAction["handle"]>
@@ -38,7 +38,7 @@ export abstract class BaseAction {
     const ActionClass = this
     return {
       /** Executes the action with the arguments of the handler. */
-      async invoke<TResult = ReturnType<TAction["handle"]>>(
+      async invoke<TResult = Awaited<ReturnType<TAction["handle"]>>>(
         ...args: Parameters<TAction["handle"]>
       ): Promise<TResult> {
         const scoped = kernel.scoped()
